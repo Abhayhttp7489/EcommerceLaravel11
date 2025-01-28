@@ -1,35 +1,98 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+namespace App\Http\Controllers;
 
-class CreateUsersTable extends Migration
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+
+class UserController extends Controller
 {
     /**
-     * Run the migrations.
-     *
-     * @return void
+     * Display a listing of users
      */
-    public function up()
+    public function index()
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id(); // Primary key
-            $table->string('name'); // User's name
-            $table->string('email')->unique(); // Unique email
-            $table->string('password'); // Encrypted password
-            $table->string('mobile')->nullable(); // Mobile field, nullable if not always required
-            $table->timestamps(); // Created at and Updated at timestamps
-        });
+        $users = User::all();
+        return view('user.index', compact('users'));
     }
 
     /**
-     * Reverse the migrations.
-     *
-     * @return void
+     * Show the form for creating a new user
      */
-    public function down()
+    public function create()
     {
-        Schema::dropIfExists('users');
+        return view('users.create');
+    }
+
+    /**
+     * Store a new user
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'mobile' => 'nullable|string'
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'mobile' => $validated['mobile']
+        ]);
+
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
+    }
+
+    /**
+     * Display the specified user
+     */
+    public function show($id)
+    {
+        $user = User::findOrFail($id);
+        return response()->json($user);
+    }
+
+    /**
+     * Show the form for editing the specified user
+     */
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        return view('users.edit', compact('user'));
+    }
+
+    /**
+     * Update the specified user
+     */
+    public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'mobile' => 'nullable|string'
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+    }
+
+    /**
+     * Remove the specified user
+     */
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }
 }

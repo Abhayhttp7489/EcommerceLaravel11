@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id(); // Primary key
             $table->string('name'); // User's name
             $table->string('email')->unique(); // Unique email
-            $table->string('mobile')->unique()->nullable(); // Unique mobile number (nullable if optional)
+            $table->string('mobile')->unique(); // Unique mobile number
             $table->timestamp('email_verified_at')->nullable(); // Email verification timestamp
             $table->string('password'); // Encrypted password
             $table->string('utype')->default('USR')->comment('ADM for admin and USR for user or customer'); // User type
